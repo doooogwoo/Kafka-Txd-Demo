@@ -1,0 +1,2 @@
+# 忽略當前目錄下所有 kafka 開頭資料夾內的 data 目錄
+kafka*/data/

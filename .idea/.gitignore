@@ -1,0 +1,21 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+
+# Kafka data
+#/kafka-docker-compose/kafka1/data/
+#/kafka-docker-compose/kafka2/data/
+#/kafka-docker-compose/kafka3/data/
+
+# logs
+*.log
+
+# node
+txn-react/node_modules/
+
+# build
+target/
+dist/
+
+# IDE
+.idea/

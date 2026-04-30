@@ -1,0 +1,108 @@
+version: "3.8"
+
+networks:
+  kafka-net:
+    driver: bridge
+
+services:
+  kafka1:
+    image: confluentinc/cp-kafka:7.8.0
+    hostname: kafka1
+    container_name: kafka1
+    ports:
+      - "9092:19092"  #外部用
+      - "9093:9093" #CONTROLLER用
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_BROKER_ID: 1
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka1:9093,2@kafka2:9093,3@kafka3:9093" #（投票機制）
+      KAFKA_LISTENERS: "PLAINTEXT://kafka1:9092,EXTERNAL://0.0.0.0:19092,CONTROLLER://kafka1:9093"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka1:9092,EXTERNAL://localhost:9092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER" #CONTROLLER 用於 cluster 控制broker
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+      CLUSTER_ID: "EmptNWtoR4GGWx-BH6nGLQ"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+    volumes:
+      - ./kafka1/data:/var/lib/kafka/data
+    networks:
+      - kafka-net
+
+  kafka2:
+    image: confluentinc/cp-kafka:7.8.0
+    hostname: kafka2
+    container_name: kafka2
+    ports:
+      - "9094:19092" # 外部用->給springboot
+      #- "9095:9093" #CONTROLLER用 #本機電腦 → localhost:9095 → kafka2 container 的 9093
+      #用意是為了讓主機能連到CONTROLLER(但實務上不需要)
+    environment:
+      KAFKA_NODE_ID: 2
+      KAFKA_BROKER_ID: 2
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka1:9093,2@kafka2:9093,3@kafka3:9093"
+      #0.0.0.0 讓 Kafka「接受所有來源的連線」
+      #Docker port mapping 才讓外部連得進來
+      KAFKA_LISTENERS: "PLAINTEXT://kafka2:9092,EXTERNAL://0.0.0.0:19092,CONTROLLER://kafka2:9093"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka2:9092,EXTERNAL://localhost:9094"
+      #為什麼ADVERTISED沒有CONTROLLER
+      #Controller Listener 是「內部用」，永遠不需要被 advertise 給外部
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT"
+      #"PLAINTEXT:PLAINTEXT" -> 名為 PLAINTEXT 的 listener 使用 PLAINTEXT 協議
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+      CLUSTER_ID: "EmptNWtoR4GGWx-BH6nGLQ"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+    volumes:
+      - ./kafka2/data:/var/lib/kafka/data
+    networks:
+      - kafka-net
+
+  kafka3:
+    image: confluentinc/cp-kafka:7.8.0
+    hostname: kafka3
+    container_name: kafka3
+    ports:
+      - "9096:19092"
+      - "9097:9093" #CONTROLLER用
+    environment:
+      KAFKA_NODE_ID: 3
+      KAFKA_BROKER_ID: 3
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka1:9093,2@kafka2:9093,3@kafka3:9093"
+      KAFKA_LISTENERS: "PLAINTEXT://kafka3:9092,EXTERNAL://0.0.0.0:19092,CONTROLLER://kafka3:9093"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka3:9092,,EXTERNAL://localhost:9096"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+      CLUSTER_ID: "EmptNWtoR4GGWx-BH6nGLQ"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+    volumes:
+      - ./kafka3/data:/var/lib/kafka/data
+    networks:
+      - kafka-net
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-cluster-ui
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka1:9092,kafka2:9092,kafka3:9092
+    depends_on:
+      - kafka1
+      - kafka2
+      - kafka3
+    networks:
+      - kafka-net
