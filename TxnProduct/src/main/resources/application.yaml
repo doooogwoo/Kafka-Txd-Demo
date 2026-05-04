@@ -1,12 +1,37 @@
+#spring:
+#  application:
+#    name: TxnProduct
+#  kafka:
+#    producer:
+#      bootstrap-servers: localhost:9092,localhost:9094,localhost:9096
+#      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+#      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+#      properties:
+#        spring.json.add.type.headers: false
+#server:
+#  port: 8081
 spring:
   application:
     name: TxnProduct
   kafka:
+    bootstrap-servers: localhost:9092,localhost:9094,localhost:9096
+    # 生產者設定 (保留你原本的)
     producer:
-      bootstrap-servers: localhost:9092,localhost:9094,localhost:9096
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
         spring.json.add.type.headers: false
+    # Kafka Streams 專屬設定
+    streams:
+      application-id: test-streams-id
+      # 如果 streams 的 bootstrap-servers 與全域不同才需要額外寫，相同則會自動繼承
+      bootstrap-servers: localhost:9092,localhost:9094,localhost:9096
+      properties:
+        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        #default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        default.value.serde: org.springframework.kafka.support.serializer.JsonSerde
+        spring.json.value.default.type: com.bank.TxnProduct.model.TransactionEvent
+        spring.json.trusted.packages: com.bank.TxnProduct.model
+
 server:
   port: 8081
