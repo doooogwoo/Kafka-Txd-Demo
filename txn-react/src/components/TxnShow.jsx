@@ -18,7 +18,7 @@ import {
 export function TxnShow({
   txnCount,
   maxDataPoints = 20,
-  title = "交易即時監控",
+  title = "Consumer 目前資料拉取數",
 }) {
   const [data, setData] = useState([])
   const [isAnimating, setIsAnimating] = useState(false)

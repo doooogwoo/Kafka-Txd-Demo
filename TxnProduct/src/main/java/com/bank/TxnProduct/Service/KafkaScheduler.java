@@ -37,7 +37,9 @@ public class KafkaScheduler {
     @Scheduled(fixedRate = 1000)
     public void sendTransactionEvent() {
         if (!isRunning) return;
-        for (int i = 0; i <= randomData.getRandomNum() ; i++) {
+        int dataNumber = randomData.getRandomNum();
+        System.out.println("dataNumber = " + dataNumber);
+        for (int i = 0; i <= dataNumber ; i++) {
             TransactionEvent event = new TransactionEvent(
                     randomData.getRandomTransactionId(),
                     randomData.getRandomAccountId(),

@@ -33,7 +33,7 @@ public class RandomData {
     public BigDecimal getRandomAmount() {
         double chance = ThreadLocalRandom.current().nextDouble();
         int amount;
-        if (chance < 0.05) {
+        if (chance < 0.001) {
             // 🔴 大額交易（5%）
             amount = ThreadLocalRandom.current().nextInt(100000, 100000000);
         } else {
